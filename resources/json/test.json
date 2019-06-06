@@ -1,0 +1,9 @@
+{
+  "url": "http://www.shopback.com/some/resource?q=1",
+  "method": "POST",
+  "headers": {
+    "Cookie": "name=value; name2=value2; name3=value3",
+    "Content-Type": "application/json",
+    "X-SHOPBACK-AGENT": "anything"
+  }
+}

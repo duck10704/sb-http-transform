@@ -1,0 +1,18 @@
+{
+  "name": "sb-http-transform",
+  "version": "1.0.0",
+  "description": "A Javascript module to analysis and transform HTTP/1.1 request for ShopBack.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "httptransform"
+  ],
+  "author": "Shawn Lin (LIN KU SHEN)",
+  "license": "ISC",
+  "dependencies": {
+    "cookie": "^0.4.0",
+    "js-yaml": "^3.13.1"
+  }
+}
