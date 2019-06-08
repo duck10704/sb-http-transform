@@ -29,9 +29,8 @@ const httpUtils = require('./utils/httpUtils');
  */
 const utils = {
     load: function (file) {
-        if (!file || !httpUtils.isSupportExtensions(file)) {
+        if (!file || !httpUtils.isSupportExtensions(file))
             throw new sbError(error.ERR_INVALID_FILE);
-        }
 
         const fileContent = fs.readFileSync(file, 'utf8');
         const extension = httpUtils.getFileExtension(file);
@@ -41,8 +40,13 @@ const utils = {
         );
     },
     transform: function (jsonObj, extension) {
-        if (!jsonObj) {
+        if (!jsonObj)
             throw new sbError(error.ERR_INVALID_CONTENT);
+
+        if (global.isCheckDomain()) {
+            const regex = new RegExp(global.getSupportedDomains().join('|'), 'i');
+            if (!regex.test(jsonObj.url))
+                throw new sbError(error.ERR_INVALID_DOMAIN);
         }
 
         const obj = handleTransform(jsonObj);
@@ -82,32 +86,43 @@ function handleTransform(content) {
 
     function transformByGet(content) {
         let output = {...content};
-        if (/\/shopback\/resource/i.test(content.url)) {
+        const regex1 = new RegExp(global.getRegexUrlReplaceFrom().join('|'), 'i');
+        if (regex1.test(content.url)) {
             output = {
                 ...output,
-                url: content.url.replace(/\/shopback\/resource/i, '/shopback/static/assets')
+                url: content.url.replace(regex1, global.getRegexUrlReplaceTo())
             }
         }
-        if (/\/shopback\/me/i.test(content.url)) {
+
+        const regex2 = new RegExp(global.getRegexUrlCheckCookie().join('|'), 'i');
+        if (regex2.test(content.url)) {
             if (content.headers && content.headers.Cookie) {
                 const cookies = cookie.parse(content.headers.Cookie);
+                const regex3 = new RegExp(global.getRegexUrlAllowCookie().join('|'), 'i');
                 let cookieExists = false;
                 Object.keys(cookies).forEach(function (key) {
-                    if (/sbcookie/i.test(key))
+                    if (regex3.test(key))
                         cookieExists = true;
                 });
                 if (!cookieExists)
                     throw new sbError(error.ERR_INVALID_COOKIE);
             }
         }
+
+        const regex4 = new RegExp(global.getRegexUrlAllowReferer().join('|'), 'i');
         if (content.headers && content.headers.Referer) {
-            if (!/www.shopback.com/i.test(content.headers.Referer))
+            if (!regex4.test(content.headers.Referer))
                 throw new sbError(error.ERR_INVALID_REFERER);
         }
-        if (/\/shopback\/api/i.test(content.url)) {
+
+        const regex5 = new RegExp(global.getRegexUrlAddFrom().join('|'), 'i');
+        if (regex5.test(content.url)) {
             output = {
                 ...output,
-                From: 'hello@shopback.com'
+                headers: {
+                    ...output.headers,
+                    From: global.getRegexUrlAddFromVal()
+                }
             }
         }
 
@@ -120,16 +135,17 @@ function handleTransform(content) {
             url: content.url.replace(/\?.*/i, '')
         };
         if (global.isCheckAgent()) {
-            if (!(content.headers && content.headers[global.getSbAgentKey()]))
-                throw new sbError(error.ERR_INVALID_AGENT);
+            if (!content.headers || !content.headers[global.getSbAgentKey()])
+                throw new sbError(error.ERR_AGENT_NOT_EXIST);
         }
         if (global.isCheckContentType()) {
-            if (content.headers && content.headers[global.getContentTypeKey()]) {
-                if (!/application\/json/i.test(content.headers[global.getContentTypeKey()]))
-                    throw new sbError(error.ERR_INVALID_CONTENT_TYPE);
-            } else {
+            if (!content.headers || !content.headers[global.getContentTypeKey()]) {
                 throw new sbError(error.ERR_INVALID_CONTENT_TYPE);
             }
+
+            const regex6 = new RegExp(global.getContentTypeVal().join('|'), 'i');
+            if (!regex6.test(content.headers[global.getContentTypeKey()]))
+                throw new sbError(error.ERR_INVALID_CONTENT_TYPE);
         }
 
         return genOutput(output);
@@ -138,13 +154,14 @@ function handleTransform(content) {
     function transformByDelete(content) {
         let output = {...content};
         if (global.isCheckAgent()) {
-            if (content.headers && content.headers[global.getSbAgentKey()]) {
-                if (content.headers[global.getSbAgentKey()] !== global.getSbAgentVal())
-                    throw new sbError(error.ERR_INVALID_AGENT);
-            } else {
-                throw new sbError(error.ERR_INVALID_AGENT);
+            if (!content.headers || !content.headers[global.getSbAgentKey()]) {
+                throw new sbError(error.ERR_AGENT_NOT_EXIST);
             }
 
+            const regex7 = new RegExp(global.getSbAgentVal().join('|'), 'i');
+            if (!regex7.test(content.headers[global.getSbAgentKey()])) {
+                throw new sbError(error.ERR_INVALID_AGENT);
+            }
         }
 
         return genOutput(output);
@@ -155,7 +172,7 @@ function handleTransform(content) {
             ...output,
             headers: {
                 ...output.headers,
-                [global.getSbTimestampKey()]: new Date().getTime()
+                [global.getSbTimestampKey()]: httpUtils.genTimestamp()
             }
         };
     }

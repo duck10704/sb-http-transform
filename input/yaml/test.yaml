@@ -3,4 +3,5 @@ method: POST
 headers:
   Cookie: name=value; name2=value2; name3=value3
   Content-Type: application/json
-  X-SHOPBACK-AGENT: anything
+  Referer: http://www.shopback.com/
+  X-SHOPBACK-AGENT: AGENT_1
