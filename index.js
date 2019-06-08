@@ -34,16 +34,25 @@ const utils = {
         }
 
         const fileContent = fs.readFileSync(file, 'utf8');
-        return httpUtils.getExtensions(file) === 'json' ?
-            utils.transform(JSON.parse(fileContent)) :
-            utils.transform(yaml.safeLoad(fileContent));
+        const extension = httpUtils.getFileExtension(file);
+        return utils.transform(
+            extension === 'json' ?
+                JSON.parse(fileContent) : yaml.safeLoad(fileContent), extension
+        );
     },
-    transform: function (jsonObj) {
+    transform: function (jsonObj, extension) {
         if (!jsonObj) {
             throw new sbError(error.ERR_INVALID_CONTENT);
         }
 
-        return handleTransform(jsonObj);
+        const obj = handleTransform(jsonObj);
+        if (global.isOutputFile()) {
+            httpUtils.outputFile(
+                extension === 'json' ?
+                    JSON.stringify(obj) : yaml.safeDump(obj, {skipInvalid: true}), extension, writeFileCallback);
+        }
+
+        return obj;
     }
 };
 
@@ -149,6 +158,21 @@ function handleTransform(content) {
                 [global.getSbTimestampKey()]: new Date().getTime()
             }
         };
+    }
+}
+
+/**
+ * handle write file callback function
+ *
+ * @param {error} err
+ * @param {object} res
+ * @private
+ */
+function writeFileCallback(err, res) {
+    if (err) {
+        throw new sbError(error.ERR_OUTPUT_FILE);
+    } else {
+        console.log('write file callback:', res);
     }
 }
 

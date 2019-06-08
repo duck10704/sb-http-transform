@@ -6,7 +6,8 @@ const error = {
     ERR_INVALID_COOKIE: 'invalid cookie',
     ERR_INVALID_REFERER: 'invalid referer',
     ERR_INVALID_AGENT: 'invalid agent',
-    ERR_INVALID_CONTENT_TYPE: 'invalid content-type'
+    ERR_INVALID_CONTENT_TYPE: 'invalid content-type',
+    ERR_OUTPUT_FILE: 'error output file'
 };
 
 module.exports = error;
