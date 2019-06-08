@@ -2,7 +2,7 @@
   "url": "http://www.shopback.com/some/resource?q=1",
   "method": "POST",
   "headers": {
-    "Cookie": "name=value; name2=value2; name3=value3",
+    "Cookie": "sbcookie=value; name2=value2; name3=value3",
     "Content-Type": "application/json",
     "Referer": "http://www.shopback.com/",
     "X-SHOPBACK-AGENT": "AGENT_1"
